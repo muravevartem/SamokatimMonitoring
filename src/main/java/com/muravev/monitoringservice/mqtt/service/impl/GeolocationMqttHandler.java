@@ -1,21 +1,18 @@
 package com.muravev.monitoringservice.mqtt.service.impl;
 
-import com.muravev.monitoringservice.document.TransportTimePoint;
-import com.muravev.monitoringservice.model.TransportPoint;
+import com.muravev.monitoringservice.model.request.EquipmentGeolocationRequest;
 import com.muravev.monitoringservice.mqtt.service.MqttHandler;
-import com.muravev.monitoringservice.service.TransportService;
+import com.muravev.monitoringservice.service.EquipmentMonitor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class GeolocationMqttHandler implements MqttHandler {
-    private final TransportService transportService;
+    private final EquipmentMonitor monitor;
 
 
     @Override
@@ -36,15 +33,14 @@ public class GeolocationMqttHandler implements MqttHandler {
             return;
         }
 
-        var transportPoint = new TransportPoint()
+        var geoPoint = new EquipmentGeolocationRequest()
                 .setTransportId(Long.parseLong(splitMessage[GeolocationMessageStructure.CLIENT_ID.ordinal()]))
                 .setLng(Double.parseDouble(splitMessage[GeolocationMessageStructure.LNG.ordinal()]))
                 .setLat(Double.parseDouble(splitMessage[GeolocationMessageStructure.LAT.ordinal()]));
 
-        TransportTimePoint savedPoint = transportService.savePoint(transportPoint)
-                .block(Duration.ofSeconds(15));
+        var savedPoint = monitor.saveGeolocation(geoPoint);
 
-        log.info("[MQTT-GEO] Saved point {}", savedPoint);
+        log.info("[MQTT-GEO] Saved point lat:{} lng:{}", savedPoint.getLat(), savedPoint.getLng());
 
 
     }

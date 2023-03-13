@@ -17,7 +17,6 @@ public class DefaultMqttHandlingManager implements MqttHandlingManager {
     private final List<MqttHandler> handlers;
 
 
-    @SuppressWarnings("NullableProblems")
     @Override
     public void handleMessage(Message<?> message) {
         for (var handler : handlers) {

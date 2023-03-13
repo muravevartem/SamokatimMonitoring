@@ -1,34 +1,38 @@
 package com.muravev.monitoringservice.controller;
 
-import com.muravev.monitoringservice.document.TransportTimePoint;
-import com.muravev.monitoringservice.model.TransportPoint;
-import com.muravev.monitoringservice.service.TransportService;
+import com.muravev.monitoringservice.model.request.EquipmentGeolocationRequest;
+import com.muravev.monitoringservice.model.response.EquipmentPointResponse;
+import com.muravev.monitoringservice.model.response.EquipmentTrackResponse;
+import com.muravev.monitoringservice.service.EquipmentMonitor;
+import com.muravev.monitoringservice.service.EquipmentTracker;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/track")
+@RequestMapping("/api/v1/tracks")
 @RequiredArgsConstructor
 public class TrackController {
-    private final TransportService transportService;
-
-
-    @GetMapping
-    public Flux<TransportTimePoint> getTrack(@RequestParam("t") Long transportId) {
-        return transportService.getTrack(transportId);
-    }
-
-    @GetMapping("/last")
-    public Mono<TransportTimePoint> getLastPoint(@RequestParam("t") Long transportId) {
-        return transportService.lastPoint(transportId);
-    }
+    private final EquipmentMonitor monitor;
+    private final EquipmentTracker tracker;
 
 
     @PostMapping
-    public Mono<TransportTimePoint> savePoint(@RequestBody @Valid TransportPoint point) {
-        return transportService.savePoint(point);
+    public EquipmentPointResponse create(@Valid @RequestBody EquipmentGeolocationRequest request) {
+        return monitor.saveGeolocation(request);
+    }
+
+    @GetMapping
+    public List<EquipmentTrackResponse> getByEquipment(@RequestParam Long tId,
+                                                       @DateTimeFormat(iso= DateTimeFormat.ISO.DATE_TIME)
+                                                       @RequestParam OffsetDateTime start,
+                                                       @DateTimeFormat(iso= DateTimeFormat.ISO.DATE_TIME)
+                                                       @RequestParam OffsetDateTime end) {
+        return tracker.getByEquipment(tId, start.toLocalDateTime(), end.toLocalDateTime());
     }
 }
